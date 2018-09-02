@@ -16,7 +16,6 @@ tacoApp.factory('RandomTacoService', ['$http', '$q', function($http, $q){
                     deferred.resolve(taco);
                 })
                 .error(function (response){
-                    console.log("error %o", response);
                     if (response && 
                         (response.status == -1 || response.status >= 500) && 
                         counter < 3
@@ -53,22 +52,12 @@ tacoApp.controller('TacoListController', function ($scope, $log) {
         };
 
         $scope.statusText = "loading";
-        console.log("taco service: %o", RandomTacoService);
-        /*
-        var taco = RandomTacoService.fetchTaco();
-        console.log("Service fetch taco got %o", taco);
-        taco.then(function(result){
-            console.log("taco then: %o", result);
-            $status.taco = result;
-        });
-        */
-        var x = RandomTacoService.fetchTaco()
+
+        RandomTacoService.fetchTaco()
         .then(function(taco){
-            console.log("controller got taco %o", taco);
             $scope.statusText = "success";
             $scope.taco = taco;
             return taco;
         });
-        console.log("x %o", x);
     })
 ;
