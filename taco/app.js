@@ -26,10 +26,10 @@ tacoApp.factory('RequestService', ['$http', '$q', '$log', function($http, $q, $l
                     if (response.status && response.status == 200 &&
                         response.data
                     ) {
-                        /* deferred.reject(response.data.errors); */
                         $log.log("Resolving response %o", response);
                         deferred.resolve(response.data);
                     } else {
+                        $log.log("Rejecting response %o", response);
                         deferred.reject("invalid response");
                     }
                 }, function fatalError(response){
@@ -42,6 +42,7 @@ tacoApp.factory('RequestService', ['$http', '$q', '$log', function($http, $q, $l
                     } else if (response.status && (response.status == -1 || response.status >= 500)) {
                         counter++;
                         setTimeout(function() { 
+                            deferred.notify("retrying xhr "+ counter +" of "+ RETRY_MAX);
                             $log.log("retrying xhr counter %o config %o", counter, response.config); 
                             doRequest(); 
                         }, RETRY_WAIT * counter);
@@ -57,9 +58,8 @@ tacoApp.factory('RequestService', ['$http', '$q', '$log', function($http, $q, $l
 
 tacoApp.factory('RandomTacoService', ['$log', 'RequestService', function($log, RequestService){
     return {
-        fetchTaco: function(config) {
-            console.log("RequestService %o", RequestService);
-            return RequestService.request('http://taco-randomizer.herokuapp.com/random/');
+        fetchTaco: function(url) {
+            return RequestService.request(url || 'http://taco-randomizer.herokuapp.com/random/');
         }
     };
 }]);
@@ -83,17 +83,19 @@ tacoApp.controller('TacoListController', function ($scope, $log) {
             name: 'default'
         };
 
-        $scope.statusText = "loading";
+        $scope.status = "loading";
 
-        //RandomTacoService.fetchTaco({ 'url': "http://localhost/x" })
         RandomTacoService.fetchTaco()
         .then(function(taco){
             $log.log("taco got %o", taco);
-            $scope.statusText = "success";
+            $scope.status = "success";
             $scope.taco = taco;
-            return taco;
         }, function(err){
+            $scope.status = "Error "+ err;
             $log.log("taco err %o", err);
+        }, function(notification){
+            $scope.status = "Notification: "+ notification;
+            $log.log("notification %o", notification);
         });
     })
 ;
