@@ -4,7 +4,7 @@ tacoApp.factory('DelayedGratificationService', ['$q', '$timeout', '$log', functi
     var base = function(name, success) {
         // generates a deferred that resolves at random times
         var deferred = $q.defer();
-        var timeUntilResolve = Math.floor((Math.random()*2000)+1);
+        var timeUntilResolve = _.random(1, 5);
 
         $log.log(name +" starting");
         $timeout(function(){
@@ -19,7 +19,7 @@ tacoApp.factory('DelayedGratificationService', ['$q', '$timeout', '$log', functi
             if (success) {
                 success(res);
             }
-        }, timeUntilResolve);
+        }, (1000 * timeUntilResolve));
 
         return deferred.promise;
     };
@@ -148,13 +148,13 @@ tacoApp.controller('DelayedGratificationController', function($scope, $q, $log, 
     $scope.four = 'loading...';
 
     $q.all([
-        DelayedGratificationService.one(function() { $scope.one = '1done!'; }),
-        DelayedGratificationService.two(function() { $scope.two = '2done!'; })
+        DelayedGratificationService.one(function() { $scope.one = '1done!' + new Date(); }),
+        DelayedGratificationService.two(function() { $scope.two = '2done!' + new Date(); })
     ])
     .then(function(res){
         $log.log("adding two more: %o", res);
-        res.push(DelayedGratificationService.three(function() { $scope.three = '3done!'; }));
-        res.push(DelayedGratificationService.four(function() { $scope.four = '4done!'; }));
+        res.push(DelayedGratificationService.three(function() { $scope.three = '3done!' + new Date(); }));
+        res.push(DelayedGratificationService.four(function() { $scope.four = '4done!' + new Date(); }));
         return $q.all(res);
     })
     .then(function(result) {
