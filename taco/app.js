@@ -1,20 +1,20 @@
 var tacoApp = angular.module('tacoApp', []);
 
-tacoApp.factory('RandomTacoService', ['$http', '$q', '$log', function($http, $q, $log){
+tacoApp.factory('RequestService', ['$http', '$q', '$log', function($http, $q, $log){
+    // amount of time to wait between retries
+    var RETRY_WAIT = 1000 * 3;
+
+    // maximum retry count
+    var RETRY_MAX = 3;
+
     return {
-        fetchTaco: function(config) {
+        request: function(url, config) {
             var counter = 0;
             var deferred = $q.defer();
 
-            // amount of time to wait between retries
-            var RETRY_WAIT = 1000 * 3;
-
-            // maximum retry count
-            var RETRY_MAX = 3;
-
             // allow configuration to be overwritten as a config param
             var config = angular.extend({
-                url: 'http://taco-randomizer.herokuapp.com/random/',
+                url: url,
                 method: 'GET'
             }, config || {});
 
@@ -42,7 +42,7 @@ tacoApp.factory('RandomTacoService', ['$http', '$q', '$log', function($http, $q,
                     } else if (response.status && (response.status == -1 || response.status >= 500)) {
                         counter++;
                         setTimeout(function() { 
-                            $log.log("retrying taco counter %o config %o", counter, response.config); 
+                            $log.log("retrying xhr counter %o config %o", counter, response.config); 
                             doRequest(); 
                         }, RETRY_WAIT * counter);
                     }
@@ -51,6 +51,15 @@ tacoApp.factory('RandomTacoService', ['$http', '$q', '$log', function($http, $q,
             doRequest();
 
             return deferred.promise;
+        }
+    };
+}]);
+
+tacoApp.factory('RandomTacoService', ['$log', 'RequestService', function($log, RequestService){
+    return {
+        fetchTaco: function(config) {
+            console.log("RequestService %o", RequestService);
+            return RequestService.request('http://taco-randomizer.herokuapp.com/random/');
         }
     };
 }]);
