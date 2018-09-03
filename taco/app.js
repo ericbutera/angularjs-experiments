@@ -148,18 +148,18 @@ tacoApp.controller('DelayedGratificationController', function($scope, $q, $log, 
     $scope.four = 'loading...';
 
     $q.all([
-        DelayedGratificationService.one(function() { $scope.one = '1done!' + new Date(); }),
-        DelayedGratificationService.two(function() { $scope.two = '2done!' + new Date(); })
+        DelayedGratificationService.one(function() { $scope.one = '1 nom' + moment().format('h:mm:ss a'); }),
+        DelayedGratificationService.two(function() { $scope.two = '2 nom' + moment().format('h:mm:ss a'); })
     ])
     .then(function(res){
         $log.log("adding two more: %o", res);
-        res.push(DelayedGratificationService.three(function() { $scope.three = '3done!' + new Date(); }));
-        res.push(DelayedGratificationService.four(function() { $scope.four = '4done!' + new Date(); }));
+        res.push(DelayedGratificationService.three(function() { $scope.three = '3 nom' + moment().format('h:mm:ss a'); }));
+        res.push(DelayedGratificationService.four(function() { $scope.four = '4 nom' + moment().format('h:mm:ss a'); }));
         return $q.all(res);
     })
     .then(function(result) {
         $log.log("q.all.then(%o)", result);
-        $scope.status = "Done!";
+        $scope.status = "All nom'd out!";
     });
 
     /*
