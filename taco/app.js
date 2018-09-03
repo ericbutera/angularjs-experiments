@@ -1,12 +1,16 @@
 var tacoApp = angular.module('tacoApp', []);
 
 tacoApp.factory('DelayedGratificationService', ['$q', '$timeout', '$log', function($q, $timeout, $log){
-    var base = function(name, success) {
+    var base = function(name, success, error, notify) {
         // generates a deferred that resolves at random times
         var deferred = $q.defer();
         var timeUntilResolve = _.random(1, 5);
 
-        $log.log(name +" starting");
+        var start = name +" starting with estimated finish " + timeUntilResolve;
+        $log.log(start);
+        if (_.isFunction(notify)) {
+            notify(start);
+        }
         $timeout(function(){
             $log.log(name +" finished");
             var res = {
@@ -16,7 +20,7 @@ tacoApp.factory('DelayedGratificationService', ['$q', '$timeout', '$log', functi
             };
             deferred.resolve(res);
 
-            if (success) {
+            if (_.isFunction(success)) {
                 success(res);
             }
         }, (1000 * timeUntilResolve));
@@ -25,7 +29,7 @@ tacoApp.factory('DelayedGratificationService', ['$q', '$timeout', '$log', functi
     };
 
     return {
-        one: function(success) { return base('one', success); },
+        one: function(success, error, notify) { return base('one', success, error, notify); },
         two: function(success) { return base('two', success); },
         three: function(success) { return base('three', success); },
         four: function(success) { return base('four', success); }
@@ -141,17 +145,24 @@ tacoApp.controller('DelayedGratificationController', function($scope, $q, $log, 
     // I also expect to be able to know when all are done but also each individual one too.
     $log.log("scope %o", $scope);
 
-    $scope.status = 'Loading';
-    $scope.one = 'loading...';
-    $scope.two = 'loading...';
-    $scope.three = 'loading...';
-    $scope.four = 'loading...';
+    $scope.status = 'Creating tacos...';
+    $scope.one = 'pending';
+    $scope.two = 'pending';
+    $scope.three = 'pending';
+    $scope.four = 'pending';
+
+    var one = DelayedGratificationService.one(
+        function() { $scope.one = '1 nom' + moment().format('h:mm:ss a'); }, 
+        null, 
+        function notify(msg){ $scope.one = msg; }
+    );
 
     $q.all([
-        DelayedGratificationService.one(function() { $scope.one = '1 nom' + moment().format('h:mm:ss a'); }),
+        one,
         DelayedGratificationService.two(function() { $scope.two = '2 nom' + moment().format('h:mm:ss a'); })
     ])
     .then(function(res){
+        // this simulates possibly adding more xhrs based on lazy loading data or validation
         $log.log("adding two more: %o", res);
         res.push(DelayedGratificationService.three(function() { $scope.three = '3 nom' + moment().format('h:mm:ss a'); }));
         res.push(DelayedGratificationService.four(function() { $scope.four = '4 nom' + moment().format('h:mm:ss a'); }));
@@ -159,14 +170,7 @@ tacoApp.controller('DelayedGratificationController', function($scope, $q, $log, 
     })
     .then(function(result) {
         $log.log("q.all.then(%o)", result);
-        $scope.status = "All nom'd out!";
+        $scope.status = "Order up!";
     });
-
-    /*
-    DelayedGratificationService.one().then(function(res){ 
-        console.log("one result %o", res); 
-        $scope.one = res;
-    });
-    */
 });
 
